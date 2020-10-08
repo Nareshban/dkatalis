@@ -1,8 +1,7 @@
 provider "aws" {
     region = "us-east-1"
-    access_key = "AKIAIJ3VP36I2L4RUWPQ"
-    secret_key = "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"
-}
+    shared_credentials_file = ".aws/creds"
+    }
 
 resource "aws_vpc" "main" {
     cidr_block = "192.168.0.0/24"
@@ -57,7 +56,7 @@ resource "aws_security_group" "allow_ssh" {
   vpc_id      = aws_vpc.main.id
 
   ingress {
-    description = "ssh from MY Ip"
+    description = "ssh from VPC"
     from_port   = 0
     to_port     = 22
     protocol    = "tcp"
@@ -119,15 +118,12 @@ resource "aws_instance" "web" {
     user_data = <<-EOF
                 #!/bin/bash
                 sudo apt update -y
-                sudo apt install openjdk-8-jdk
-                sudo wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
-                sudo apt-get install apt-transport-https
-				echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-7.x.list
-				sudo apt-get install elasticsearch
-				sudo /bin/systemctl daemon-reload
-				sudo /bin/systemctl enable elasticsearch.service
-				sudo systemctl start elasticsearch
-				EOF
+                sudo wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.9.2-amd64.deb
+                sudo dpkg -i elasticsearch-7.9.2-amd64.deb
+                sudo /bin/systemctl daemon-reload
+                sudo /bin/systemctl enable elasticsearch.service
+                sudo systemctl start elasticsearch.service
+                EOF
     tags = {
         Name = "webserver"
     }
